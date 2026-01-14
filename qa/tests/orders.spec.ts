@@ -1,0 +1,10 @@
+import { test, expect } from "@playwright/test";
+
+test("Frontend shows orders from DB", async ({ page }) => {
+  await page.goto("http://localhost:3000");
+
+  await expect(
+    page.getByText("Keyboard")
+  ).toBeVisible();
+});
+
