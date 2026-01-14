@@ -22,12 +22,13 @@ pipeline {
     }
 
     stage('QA Automation') {
-      steps {
-        dir('qa') {
-          sh 'npm install'
-          sh 'npx playwright test'
-        }
-      }
+  steps {
+    dir('qa') {
+      sh 'npm install'
+      sh 'npx playwright install --with-deps'
+      sh 'npx playwright test'
     }
+  }
+}
   }
 }
