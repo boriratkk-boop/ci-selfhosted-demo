@@ -15,6 +15,15 @@ const db = mysql.createPool({
   database: "demo_ci"
 });
 
+app.get("/health", async (req, res) => {
+  try {
+    await db.query("SELECT 1");
+    res.status(200).json({ status: "ok" });
+  } catch {
+    res.status(500).json({ status: "db_not_ready" });
+  }
+});
+
 app.get("/orders", async (req, res) => {
   try {
     const [rows] = await db.query("CALL get_orders()");
@@ -28,5 +37,7 @@ app.get("/orders", async (req, res) => {
 app.listen(3001, () => {
   console.log("Backend running on http://localhost:3001");
 });
+
+
 
 
