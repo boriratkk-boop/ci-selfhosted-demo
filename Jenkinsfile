@@ -1,6 +1,10 @@
 pipeline {
   agent any
 
+  environment {
+    GITHUB_TOKEN = credentials('github-token')
+  }
+
   stages {
 
     stage('Start Backend') {
@@ -45,20 +49,27 @@ pipeline {
       }
     }
 
-    stage('QA Automation') {
-      steps {
-        dir('qa') {
-          sh 'npm install'
-          sh 'npx playwright install --with-deps'
-          sh 'npx playwright test'
-        }
+      stage('QA Automation') {
+    steps {
+      dir('qa') {
+        sh 'npm install'
+        sh 'npx playwright install --with-deps'
+        sh 'npx playwright test'   // ถ้า fail → exit 1 → Jenkins FAIL
       }
     }
   }
+  }
 
   post {
-    always {
-      sh 'pkill node || true'
+    success {
+      githubNotify context: 'jenkins/qa',
+                   description: 'Tests passed',
+                   status: 'SUCCESS'
+    }
+    failure {
+      githubNotify context: 'jenkins/qa',
+                   description: 'Tests failed',
+                   status: 'FAILURE'
     }
   }
 }
