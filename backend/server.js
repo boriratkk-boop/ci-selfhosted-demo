@@ -7,19 +7,21 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 
-// ✅ DEFINE db ให้ชัดเจน
+// ✅ CONNECT DB VIA DOCKER SERVICE NAME
 const db = mysql.createPool({
-  host: "localhost",
-  user: "app",          // user ที่เราสร้างไว้
+  host: "db",
+  user: "app",
   password: "app1234",
-  database: "demo_ci"
+  database: "demo_ci",
+  waitForConnections: true,
+  connectionLimit: 10,
 });
 
 app.get("/health", async (req, res) => {
   try {
     await db.query("SELECT 1");
     res.status(200).json({ status: "ok" });
-  } catch {
+  } catch (err) {
     res.status(500).json({ status: "db_not_ready" });
   }
 });
@@ -35,9 +37,5 @@ app.get("/orders", async (req, res) => {
 });
 
 app.listen(3001, () => {
-  console.log("Backend running on http://localhost:3001");
+  console.log("Backend running on port 3001");
 });
-
-
-
-
