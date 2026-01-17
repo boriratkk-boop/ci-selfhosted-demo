@@ -6,7 +6,7 @@ pipeline {
       steps {
         sh '''
           docker compose down -v || true
-          docker compose up --build --abort-on-container-exit
+          docker compose up --abort-on-container-exit
         '''
       }
     }
@@ -17,7 +17,7 @@ pipeline {
       sh 'docker compose down -v || true'
     }
     success {
-      echo '✅ CI PASSED'
+      echo '✅ CI PASSED – allow merge'
     }
     failure {
       echo '❌ CI FAILED – block merge'
