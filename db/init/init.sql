@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
 -- SEED DATA
 INSERT INTO orders (product, qty) VALUES
-('Keyboard2', 1),
+('Keybo', 1),
 ('Mouse', 2);
 
 -- STORED PROCEDURE
