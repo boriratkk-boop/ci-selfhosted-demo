@@ -2,13 +2,6 @@ pipeline {
   agent any
 
   stages {
-
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
-
     stage('Build & Test (Base Test)') {
       steps {
         sh '''
@@ -23,13 +16,11 @@ pipeline {
     always {
       sh 'docker compose down -v || true'
     }
-
+    success {
+      echo '✅ CI PASSED'
+    }
     failure {
       echo '❌ CI FAILED – block merge'
-    }
-
-    success {
-      echo '✅ CI PASSED – ready for deploy'
     }
   }
 }
