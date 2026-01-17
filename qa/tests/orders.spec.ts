@@ -8,6 +8,6 @@ await page.waitForResponse(resp =>
 );
 
 await expect(page.getByText("Keyboard")).toBeVisible();
-//123456
+//1234568
 });
 
