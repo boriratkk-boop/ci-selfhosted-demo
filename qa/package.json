@@ -1,14 +1,9 @@
 {
   "name": "qa",
-  "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "test": "playwright test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "devDependencies": {
     "@playwright/test": "^1.57.0"
   }
