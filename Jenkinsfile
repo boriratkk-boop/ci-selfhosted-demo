@@ -6,6 +6,7 @@ pipeline {
       steps {
         sh '''
           docker compose down -v || true
+          docker compose build --no-cache
           docker compose up --abort-on-container-exit
         '''
       }
