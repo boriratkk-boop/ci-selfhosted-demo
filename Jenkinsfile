@@ -1,75 +1,35 @@
 pipeline {
   agent any
 
-  environment {
-    GITHUB_TOKEN = credentials('github-token')
-  }
-
   stages {
 
-    stage('Start Backend') {
+    stage('Checkout') {
       steps {
-        dir('backend') {
-          sh 'npm install'
-          sh 'nohup node server.js &'
-        }
+        checkout scm
       }
     }
 
-    stage('Wait Backend Ready') {
+    stage('Build & Test (Base Test)') {
       steps {
         sh '''
-        until curl -s http://localhost:3001/health | grep ok
-        do
-          echo "Waiting for backend..."
-          sleep 2
-        done
+          docker compose down -v || true
+          docker compose up --build --abort-on-container-exit
         '''
       }
     }
-
-    stage('Start Frontend') {
-      steps {
-        dir('frontend') {
-          sh 'npm install'
-          sh 'nohup npm start &'
-        }
-      }
-    }
-
-    stage('Wait Frontend Ready') {
-      steps {
-        sh '''
-        until curl -s http://localhost:3000
-        do
-          echo "Waiting for frontend..."
-          sleep 2
-        done
-        '''
-      }
-    }
-
-      stage('QA Automation') {
-    steps {
-      dir('qa') {
-        sh 'npm install'
-        sh 'npx playwright install --with-deps'
-        sh 'npx playwright test'   // ถ้า fail → exit 1 → Jenkins FAIL
-      }
-    }
-  }
   }
 
   post {
-    success {
-      githubNotify context: 'jenkins/qa',
-                   description: 'Tests passed',
-                   status: 'SUCCESS'
+    always {
+      sh 'docker compose down -v || true'
     }
+
     failure {
-      githubNotify context: 'jenkins/qa',
-                   description: 'Tests failed',
-                   status: 'FAILURE'
+      echo '❌ CI FAILED – block merge'
+    }
+
+    success {
+      echo '✅ CI PASSED – ready for deploy'
     }
   }
 }

@@ -4,9 +4,10 @@ function App() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/orders")
+    fetch("http://backend:3001/orders")
       .then(res => res.json())
-      .then(setOrders);
+      .then(setOrders)
+      .catch(console.error);
   }, []);
 
   return (
