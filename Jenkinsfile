@@ -41,6 +41,15 @@ pipeline {
                      allowEmptyArchive: true
 
       sh 'ls -la playwright-report || echo "no report"'
+
+      publishHTML([
+      reportDir: 'playwright-report',
+      reportFiles: 'index.html',
+      reportName: 'Playwright E2E Report',
+      keepAll: true,
+      alwaysLinkToLastBuild: true
+    ])
+  }
     }
     success {
       echo '✅ CI PASSED – allow merge'
