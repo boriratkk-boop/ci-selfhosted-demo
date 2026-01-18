@@ -38,13 +38,13 @@ pipeline {
 
       sh 'ls -la playwright-report || echo "no report"'
 
-      publishHTML([
-        allowMissing: true,
+      publishHTML(target: [
         reportDir: 'playwright-report',
         reportFiles: 'index.html',
         reportName: 'Playwright E2E Report',
         keepAll: true,
-        alwaysLinkToLastBuild: true
+        alwaysLinkToLastBuild: true,
+        allowMissing: true
       ])
     }
 
