@@ -65,11 +65,13 @@ stage('Comment Report URL to PR') {
         REPO="boriratkk-boop/ci-selfhosted-demo"
         REPORT_URL="https://boriratkk-boop.github.io/ci-selfhosted-demo/pr-${PR_NUMBER}/index.html"
 
-        curl -X POST \
+        curl -s -X POST \
           -H "Authorization: token ${GITHUB_TOKEN}" \
           -H "Accept: application/vnd.github+json" \
           https://api.github.com/repos/${REPO}/issues/${PR_NUMBER}/comments \
-          -d "{\"body\":\"🧪 **Playwright E2E Report**\\n👉 ${REPORT_URL}\"}"
+          -d '{
+            "body": "🧪 Playwright E2E Report\\n👉 '"${REPORT_URL}"'"
+          }'
       '''
     }
   }
