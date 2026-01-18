@@ -36,7 +36,7 @@ services:
     build: ./qa
     container_name: demo_qa
     depends_on:
-      - frontend
+      - frontend:
           condition: service_started
     volumes:
       - ./playwright-report:/app/playwright-report
