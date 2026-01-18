@@ -39,6 +39,7 @@ pipeline {
       sh 'ls -la playwright-report || echo "no report"'
 
       publishHTML([
+        allowMissing: true,
         reportDir: 'playwright-report',
         reportFiles: 'index.html',
         reportName: 'Playwright E2E Report',
