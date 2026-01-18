@@ -26,7 +26,7 @@ pipeline {
     stage('Run E2E Tests (Playwright)') {
       steps {
         sh '''
-          docker compose run qa npx playwright test
+          docker compose run qa npx playwright test --reporter=html
         '''
       }
     }
@@ -36,6 +36,8 @@ pipeline {
   post {
     always {
       sh 'docker compose down -v || true'
+
+      archiveArtifacts artifacts: 'playwright-report/**', fingerprint: true
     }
     success {
       echo '✅ CI PASSED – allow merge'
