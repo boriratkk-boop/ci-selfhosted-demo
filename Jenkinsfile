@@ -17,43 +17,40 @@ pipeline {
 
     stage('Start Services') {
       steps {
-        sh '''
-          docker compose up -d db backend frontend
-        '''
+        sh 'docker compose up -d db backend frontend'
       }
     }
 
     stage('Run E2E Tests (Playwright)') {
       steps {
-        sh '''
-          docker compose run qa npx playwright test
-        '''
+        sh 'docker compose run qa npx playwright test'
       }
     }
-
   }
 
   post {
+
     always {
       sh 'docker compose down -v || true'
 
       archiveArtifacts artifacts: 'playwright-report/**',
-                     allowEmptyArchive: true
+                       allowEmptyArchive: true
 
       sh 'ls -la playwright-report || echo "no report"'
 
       publishHTML([
-      reportDir: 'playwright-report',
-      reportFiles: 'index.html',
-      reportName: 'Playwright E2E Report',
-      keepAll: true,
-      alwaysLinkToLastBuild: true
-    ])
-  }
+        reportDir: 'playwright-report',
+        reportFiles: 'index.html',
+        reportName: 'Playwright E2E Report',
+        keepAll: true,
+        alwaysLinkToLastBuild: true
+      ])
     }
+
     success {
       echo '✅ CI PASSED – allow merge'
     }
+
     failure {
       echo '❌ CI FAILED – block merge'
     }
