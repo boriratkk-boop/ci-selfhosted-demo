@@ -24,8 +24,12 @@ pipeline {
     stage('Run E2E Tests (Playwright)') {
   steps {
     script {
-      catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+      env.E2E_RESULT = 'PASS'
+      try {
         sh 'docker compose run qa npx playwright test'
+      } catch (e) {
+        env.E2E_RESULT = 'FAIL'
+        currentBuild.result = 'FAILURE'
       }
     }
   }
@@ -60,12 +64,18 @@ stage('Comment Report URL to PR') {
         PR_NUMBER=${CHANGE_ID}
         REPORT_URL="https://boriratkk-boop.github.io/ci-selfhosted-demo/pr-${PR_NUMBER}/index.html"
 
+        if [ "${E2E_RESULT}" = "PASS" ]; then
+          STATUS="✅ PASSED"
+        else
+          STATUS="❌ FAILED"
+        fi
+
         curl -s -X POST \
           -H "Authorization: token ${GITHUB_TOKEN}" \
           -H "Accept: application/vnd.github+json" \
           https://api.github.com/repos/boriratkk-boop/ci-selfhosted-demo/issues/${PR_NUMBER}/comments \
           -d "{
-            \\"body\\": \\"🧪 Playwright E2E Report\\\\n👉 ${REPORT_URL}\\"
+            \\"body\\": \\"🧪 Playwright E2E ${STATUS}\\\\n👉 ${REPORT_URL}\\"
           }"
       '''
     }
