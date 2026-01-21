@@ -11,5 +11,10 @@ export default defineConfig({
   use: {
     baseURL: 'http://frontend:3000',
     headless: true,
+
+    // (สำหรับ debug CI)
+    trace: 'retain-on-failure',        // เก็บ trace เฉพาะ fail
+    video: 'retain-on-failure',        // เก็บ video เฉพาะ fail
+    screenshot: 'only-on-failure',     // เก็บ screenshot เฉพาะ fail
   },
 });
