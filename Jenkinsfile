@@ -9,14 +9,13 @@ pipeline {
       withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
 
         def response = sh(
-          script: 
-          sh '''
+          script: '''
             curl -s \
               -H "Authorization: token $GITHUB_TOKEN" \
               https://api.github.com/repos/boriratkk-boop/ci-selfhosted-demo/issues/$CHANGE_ID
           ''',
           returnStdout: true
-        )
+        ).trim()
 
         def pr = readJSON text: response
         def labels = pr.labels.collect { it.name }
@@ -30,8 +29,6 @@ pipeline {
         }
 
         echo "Detected TEST_TYPE = ${env.TEST_TYPE}"
-        echo "RAW PR JSON:"
-        echo response
       }
     }
   }
