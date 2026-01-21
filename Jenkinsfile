@@ -11,6 +11,33 @@ parameters {
 
   stages {
 
+    stage('Detect Test Type from PR Label') {
+  steps {
+    script {
+      withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+
+        def response = sh(
+          script: """
+            curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+            https://api.github.com/repos/boriratkk-boop/ci-selfhosted-demo/issues/${CHANGE_ID}
+          """,
+          returnStdout: true
+        )
+
+        if (response.contains('"name":"e2e:regression"')) {
+          env.TEST_TYPE = 'regression'
+        } else if (response.contains('"name":"e2e:full"')) {
+          env.TEST_TYPE = 'all'
+        } else {
+          env.TEST_TYPE = 'smoke'
+        }
+
+        echo "Detected TEST_TYPE = ${env.TEST_TYPE}"
+      }
+    }
+  }
+}
+
     stage('Cleanup (Before)') {
       steps {
         sh 'docker compose down -v || true'
@@ -35,15 +62,15 @@ parameters {
       env.E2E_RESULT = 'PASS'
 
       try {
-        if (params.TEST_TYPE == 'smoke') {
-        sh 'docker compose run qa npx playwright test --grep @smoke'
-      } 
-      else if (params.TEST_TYPE == 'regression') {
-        sh 'docker compose run qa npx playwright test --grep @regression'
-      } 
-      else {
-        sh 'docker compose run qa npx playwright test'
-      }
+        if (env.TEST_TYPE == 'smoke') {
+          sh 'docker compose run qa npx playwright test --grep @smoke'
+        } 
+        else if (env.TEST_TYPE == 'regression') {
+          sh 'docker compose run qa npx playwright test --grep @regression'
+        } 
+        else {
+          sh 'docker compose run qa npx playwright test'
+        }
       } catch (e) {
         env.E2E_RESULT = 'FAIL'
         currentBuild.result = 'FAILURE'
