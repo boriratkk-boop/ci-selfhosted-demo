@@ -24,12 +24,15 @@ pipeline {
     stage('Run E2E Tests (Playwright)') {
   steps {
     script {
+      def TEST_TYPE = env.TEST_TYPE ?: 'smoke'
       env.E2E_RESULT = 'PASS'
-      try {
-        sh 'docker compose run qa npx playwright test'
-      } catch (e) {
+
+      catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+        sh "docker compose run qa npx playwright test --project=${TEST_TYPE}"
+      }
+
+      if (currentBuild.currentResult == 'FAILURE') {
         env.E2E_RESULT = 'FAIL'
-        currentBuild.result = 'FAILURE'
       }
     }
   }
