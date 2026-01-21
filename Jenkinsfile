@@ -1,5 +1,13 @@
 pipeline {
   agent any
+  
+parameters {
+    choice(
+      name: 'TEST_TYPE',
+      choices: ['smoke', 'regression', 'all'],
+      description: 'Select test type to run'
+    )
+  }
 
   stages {
 
@@ -25,8 +33,17 @@ pipeline {
   steps {
     script {
       env.E2E_RESULT = 'PASS'
+
       try {
+        if (params.TEST_TYPE == 'smoke') {
+        sh 'docker compose run qa npx playwright test --grep @smoke'
+      } 
+      else if (params.TEST_TYPE == 'regression') {
+        sh 'docker compose run qa npx playwright test --grep @regression'
+      } 
+      else {
         sh 'docker compose run qa npx playwright test'
+      }
       } catch (e) {
         env.E2E_RESULT = 'FAIL'
         currentBuild.result = 'FAILURE'
