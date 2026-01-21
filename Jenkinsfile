@@ -1,13 +1,5 @@
 pipeline {
   agent any
-  
-parameters {
-    choice(
-      name: 'TEST_TYPE',
-      choices: ['smoke', 'regression', 'all'],
-      description: 'Select test type to run'
-    )
-  }
 
   stages {
 
@@ -33,6 +25,8 @@ parameters {
         }
 
         echo "Detected TEST_TYPE = ${env.TEST_TYPE}"
+        echo "RAW PR JSON:"
+        echo response
       }
     }
   }
