@@ -1,5 +1,13 @@
 pipeline {
   agent any
+  
+parameters {
+    choice(
+      name: 'TEST_TYPE',
+      choices: ['smoke', 'regression', 'all'],
+      description: 'Select test type to run'
+    )
+  }
 
   stages {
 
@@ -24,15 +32,17 @@ pipeline {
     stage('Run E2E Tests (Playwright)') {
   steps {
     script {
-      def TEST_TYPE = env.TEST_TYPE ?: 'smoke'
       env.E2E_RESULT = 'PASS'
 
-      catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-        sh "docker compose run qa npx playwright test --project=${TEST_TYPE}"
-      }
-
-      if (currentBuild.currentResult == 'FAILURE') {
+      try {
+        if (params.TEST_TYPE == 'all') {
+          sh 'docker compose run qa npx playwright test'
+        } else {
+          sh "docker compose run qa npx playwright test --grep @${params.TEST_TYPE}"
+        }
+      } catch (e) {
         env.E2E_RESULT = 'FAIL'
+        currentBuild.result = 'FAILURE'
       }
     }
   }
