@@ -7,7 +7,7 @@ await page.waitForResponse(resp =>
   resp.url().includes("/orders") && resp.status() === 200
 );
 
-await expect(page.getByText("Keyboard")).toBeVisible();
+await expect(page.getByText("Keyboardsss")).toBeVisible();
 //12345689
 });
 
