@@ -16,9 +16,12 @@ pipeline {
           returnStdout: true
         )
 
-        if (response.contains('"name":"e2e:regression"')) {
+        def pr = readJSON text: response
+        def labels = pr.labels.collect { it.name }
+
+        if (labels.contains('e2e:regression')) {
           env.TEST_TYPE = 'regression'
-        } else if (response.contains('"name":"e2e:full"')) {
+        } else if (labels.contains('e2e:full')) {
           env.TEST_TYPE = 'all'
         } else {
           env.TEST_TYPE = 'smoke'
