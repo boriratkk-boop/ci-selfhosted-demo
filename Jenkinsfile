@@ -36,7 +36,7 @@ parameters {
 
       try {
         if (params.TEST_TYPE == 'smoke') {
-          sh 'docker compose run qa npx playwright test'
+          sh 'docker compose run qa npx playwright test --grep @smoke'
         } else {
           sh "docker compose run qa npx playwright test --grep @${params.TEST_TYPE}"
         }
