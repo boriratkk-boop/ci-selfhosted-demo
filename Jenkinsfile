@@ -11,50 +11,66 @@ pipeline {
 
   stages {
 
+//     stage('Detect Test Type') {
+//   steps {
+//     script {
+
+//       if (env.CHANGE_ID) {
+//         echo "🔀 PR build detected (PR-${env.CHANGE_ID})"
+//         // PR จะไปใช้ logic label ของคุณ (e2e:smoke / regression)
+//       } else {
+//         echo "🌙 Nightly build detected"
+//         env.TEST_TYPE = params.TEST_TYPE ?: 'regression'
+//       }
+
+//       echo "Final TEST_TYPE = ${env.TEST_TYPE}"
+//     }
+//   }
+// }
+
     stage('Detect Test Type') {
   steps {
     script {
 
       if (env.CHANGE_ID) {
+        // =========================
+        // PR CI
+        // =========================
         echo "🔀 PR build detected (PR-${env.CHANGE_ID})"
-        // PR จะไปใช้ logic label ของคุณ (e2e:smoke / regression)
+
+        withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+          def response = sh(
+            script: '''
+              curl -s \
+                -H "Authorization: token $GITHUB_TOKEN" \
+                https://api.github.com/repos/boriratkk-boop/ci-selfhosted-demo/issues/$CHANGE_ID
+            ''',
+            returnStdout: true
+          ).trim()
+
+          def pr = readJSON text: response
+          def labels = pr.labels.collect { it.name }
+
+          if (labels.contains('e2e:regression')) {
+            env.TEST_TYPE = 'regression'
+          } else if (labels.contains('e2e:full')) {
+            env.TEST_TYPE = 'all'
+          } else {
+            env.TEST_TYPE = 'smoke'
+          }
+        }
+
       } else {
+        // =========================
+        // Nightly CI
+        // =========================
         echo "🌙 Nightly build detected"
+
+        // ใช้ parameter หรือ default
         env.TEST_TYPE = params.TEST_TYPE ?: 'regression'
       }
 
       echo "Final TEST_TYPE = ${env.TEST_TYPE}"
-    }
-  }
-}
-
-    stage('Detect Test Type from PR Label') {
-  steps {
-    script {
-      withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-
-        def response = sh(
-          script: '''
-            curl -s \
-              -H "Authorization: token $GITHUB_TOKEN" \
-              https://api.github.com/repos/boriratkk-boop/ci-selfhosted-demo/issues/$CHANGE_ID
-          ''',
-          returnStdout: true
-        ).trim()
-
-        def pr = readJSON text: response
-        def labels = pr.labels.collect { it.name }
-
-        if (labels.contains('e2e:regression')) {
-          env.TEST_TYPE = 'regression'
-        } else if (labels.contains('e2e:full')) {
-          env.TEST_TYPE = 'all'
-        } else {
-          env.TEST_TYPE = 'smoke'
-        }
-
-        echo "Detected TEST_TYPE = ${env.TEST_TYPE}"
-      }
     }
   }
 }
