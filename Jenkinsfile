@@ -2,12 +2,12 @@ pipeline {
   agent any
 
   parameters {
-      choice(
-        name: 'TEST_TYPE',
-        choices: ['smoke', 'regression', 'all'],
-        description: 'Test type for Nightly CI'
-      )
-    }
+    choice(
+      name: 'TEST_TYPE',
+      choices: ['regression', 'smoke', 'all'],
+      description: 'Test type for Nightly CI'
+    )
+  }
 
   stages {
 
