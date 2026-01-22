@@ -199,26 +199,28 @@ pipeline {
     }
 
     success {
-      echo '✅ CI PASSED – allow merge'
-
+      
       script {
       if (!env.CHANGE_ID) {
         echo '🌙 Nightly CI PASS'
         echo "TEST_TYPE = ${env.TEST_TYPE}"
         echo '📢 TODO: send Slack / Line / Email notification here'
-      }
+      }else {
+          echo '✅ CI PASSED – allow merge'
+        }
     }
     }
 
     failure {
-      echo '❌ CI FAILED – block merge'
-      
+
       script {
       if (!env.CHANGE_ID) {
         echo '🌙 Nightly CI FAILED'
         echo "TEST_TYPE = ${env.TEST_TYPE}"
         echo '📢 TODO: send Slack / Line / Email notification here'
-      }
+      }else {
+          echo '❌ CI FAILED – block merge'
+        }
     }
   }
 }
