@@ -7,4 +7,4 @@ RUN npm install
 
 COPY . .
 
-CMD ["npx", "playwright", "test"]
+CMD ["npm", "run", "test"]
