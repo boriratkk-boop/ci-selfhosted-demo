@@ -1,7 +1,32 @@
 pipeline {
   agent any
 
+  parameters {
+      choice(
+        name: 'TEST_TYPE',
+        choices: ['smoke', 'regression', 'all'],
+        description: 'Test type for Nightly CI'
+      )
+    }
+
   stages {
+
+    stage('Detect Test Type') {
+  steps {
+    script {
+
+      if (env.CHANGE_ID) {
+        echo "🔀 PR build detected (PR-${env.CHANGE_ID})"
+        // PR จะไปใช้ logic label ของคุณ (e2e:smoke / regression)
+      } else {
+        echo "🌙 Nightly build detected"
+        env.TEST_TYPE = params.TEST_TYPE ?: 'regression'
+      }
+
+      echo "Final TEST_TYPE = ${env.TEST_TYPE}"
+    }
+  }
+}
 
     stage('Detect Test Type from PR Label') {
   steps {
@@ -79,48 +104,62 @@ pipeline {
   steps {
     withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
       sh '''
-        PR_NUMBER=${CHANGE_ID}
+        set -e
+
+        if [ -n "$CHANGE_ID" ]; then
+          REPORT_PATH="pr-${CHANGE_ID}"
+        else
+          REPORT_PATH="nightly"
+        fi
+
+        echo "Publish report to: $REPORT_PATH"
+
         rm -rf gh-pages
         git clone https://${GITHUB_TOKEN}@github.com/boriratkk-boop/ci-selfhosted-demo.git \
           --branch gh-pages --single-branch gh-pages || \
         git clone https://${GITHUB_TOKEN}@github.com/boriratkk-boop/ci-selfhosted-demo.git gh-pages
 
-        mkdir -p gh-pages/pr-${PR_NUMBER}
-        cp -r playwright-report/* gh-pages/pr-${PR_NUMBER}/
+        mkdir -p gh-pages/${REPORT_PATH}
+        rm -rf gh-pages/${REPORT_PATH}/*
+        cp -r playwright-report/* gh-pages/${REPORT_PATH}/
 
         cd gh-pages
         git add .
-        git commit -m "Publish Playwright report for PR-${PR_NUMBER}" || echo "no changes"
+        git commit -m "Publish Playwright report (${REPORT_PATH})" || echo "no changes"
         git push origin gh-pages
       '''
     }
   }
 }
 
-stage('Comment Report URL to PR') {
-  steps {
-    withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
-      sh '''
-        PR_NUMBER=${CHANGE_ID}
-        REPORT_URL="https://boriratkk-boop.github.io/ci-selfhosted-demo/pr-${PR_NUMBER}/index.html"
 
-        if [ "${E2E_RESULT}" = "PASS" ]; then
-          STATUS="✅ PASSED"
-        else
-          STATUS="❌ FAILED"
-        fi
+    stage('Comment Report URL to PR') {
+      when {
+        expression { return env.CHANGE_ID }
+      }
+      steps {
+        withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+          sh '''
+            PR_NUMBER=${CHANGE_ID}
+            REPORT_URL="https://boriratkk-boop.github.io/ci-selfhosted-demo/pr-${PR_NUMBER}/index.html"
 
-        curl -s -X POST \
-          -H "Authorization: token ${GITHUB_TOKEN}" \
-          -H "Accept: application/vnd.github+json" \
-          https://api.github.com/repos/boriratkk-boop/ci-selfhosted-demo/issues/${PR_NUMBER}/comments \
-          -d "{
-            \\"body\\": \\"🧪 Playwright E2E ${STATUS}\\\\n👉 ${REPORT_URL}\\"
-          }"
-      '''
+            if [ "${E2E_RESULT}" = "PASS" ]; then
+              STATUS="✅ PASSED"
+            else
+              STATUS="❌ FAILED"
+            fi
+
+            curl -s -X POST \
+              -H "Authorization: token ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/boriratkk-boop/ci-selfhosted-demo/issues/${PR_NUMBER}/comments \
+              -d "{
+                \\"body\\": \\"🧪 Playwright E2E ${STATUS}\\\\n👉 ${REPORT_URL}\\"
+              }"
+          '''
+        }
+      }
     }
-  }
-}
   }
 
   post {
@@ -149,6 +188,13 @@ stage('Comment Report URL to PR') {
 
     failure {
       echo '❌ CI FAILED – block merge'
+      
+      script {
+      if (!env.CHANGE_ID) {
+        echo '🌙 Nightly CI FAILED'
+        echo "TEST_TYPE = ${env.TEST_TYPE}"
+        echo '📢 TODO: send Slack / Line / Email notification here'
+      }
     }
   }
 }
