@@ -100,13 +100,13 @@ pipeline {
 
       try {
         if (env.TEST_TYPE == 'smoke') {
-          sh 'docker compose run qa npx playwright test --grep @smoke'
+          sh 'docker compose run qa npx playwright test --grep @smoke --workers=2'
         } 
         else if (env.TEST_TYPE == 'regression') {
-          sh 'docker compose run qa npx playwright test --grep @regression'
+          sh 'docker compose run qa npx playwright test --grep @regression --workers=4'
         } 
         else {
-          sh 'docker compose run qa npx playwright test'
+          sh 'docker compose run qa npx playwright test --workers=4'
         }
       } catch (e) {
         env.E2E_RESULT = 'FAIL'
@@ -199,7 +199,7 @@ pipeline {
     }
 
     success {
-      
+
       script {
       if (!env.CHANGE_ID) {
         echo '🌙 Nightly CI PASS'
